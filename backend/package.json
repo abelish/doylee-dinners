@@ -1,0 +1,64 @@
+{
+  "name": "doylee-dinners-backend",
+  "version": "1.0.0",
+  "description": "Backend Lambda functions for Doylee Dinners",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "local:start": "cd ../infrastructure/localstack && docker-compose up -d",
+    "local:stop": "cd ../infrastructure/localstack && docker-compose down",
+    "local:deploy": "bash ../scripts/local-deploy.sh",
+    "package": "npm run build && bash ../scripts/package-lambdas.sh"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "dynamodb",
+    "serverless",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.525.0",
+    "@aws-sdk/lib-dynamodb": "^3.525.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.136",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.11.24",
+    "@types/uuid": "^9.0.8",
+    "aws-sdk-client-mock": "^3.0.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.test.ts",
+      "!src/**/*.d.ts"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ]
+  }
+}

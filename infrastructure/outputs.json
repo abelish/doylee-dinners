@@ -1,0 +1,70 @@
+{
+  "api_endpoint": {
+    "sensitive": false,
+    "type": "string",
+    "value": "https://cxzol9zbdf.execute-api.us-west-2.amazonaws.com/prod"
+  },
+  "api_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "cxzol9zbdf"
+  },
+  "cloudfront_distribution_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "E3QI4HJQ38OYVT"
+  },
+  "cloudfront_domain": {
+    "sensitive": false,
+    "type": "string",
+    "value": "d24ba9lcvbc48t.cloudfront.net"
+  },
+  "deployment_info": {
+    "sensitive": false,
+    "type": [
+      "object",
+      {
+        "api_endpoint": "string",
+        "cloudfront_domain": "string",
+        "table_name": "string",
+        "website_url": "string"
+      }
+    ],
+    "value": {
+      "api_endpoint": "https://cxzol9zbdf.execute-api.us-west-2.amazonaws.com/prod",
+      "cloudfront_domain": "d24ba9lcvbc48t.cloudfront.net",
+      "table_name": "doylee-dinners-table",
+      "website_url": "https://d24ba9lcvbc48t.cloudfront.net"
+    }
+  },
+  "dynamodb_table_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:dynamodb:us-west-2:933858446951:table/doylee-dinners-table"
+  },
+  "dynamodb_table_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "doylee-dinners-table"
+  },
+  "frontend_bucket_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "doylee-dinners-frontend-prod"
+  },
+  "lambda_layer_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": ""
+  },
+  "lambda_role_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:iam::933858446951:role/doylee-dinners-lambda-exec-role"
+  },
+  "website_url": {
+    "sensitive": false,
+    "type": "string",
+    "value": "https://d24ba9lcvbc48t.cloudfront.net"
+  }
+}

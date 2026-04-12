@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Build artifacts
+frontend/build/
+frontend/dist/
+backend/dist/
+*.zip
+
+# Terraform
+infrastructure/terraform/.terraform/
+infrastructure/terraform/.terraform.lock.hcl
+infrastructure/terraform/terraform.tfstate
+infrastructure/terraform/terraform.tfstate.backup
+infrastructure/terraform/terraform.tfstate.*.backup
+infrastructure/terraform/*.tfvars
+!infrastructure/terraform/*.tfvars.example
+*.tfplan
+infrastructure/outputs.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# LocalStack
+infrastructure/localstack/volume/
+
+# AWS Lambda packages
+backend/build/
+backend/.aws-sam/
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+.cache/
+tmp/
+temp/

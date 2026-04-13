@@ -150,3 +150,17 @@ resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
 resource "aws_api_gateway_account" "main" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
 }
+
+# /auth/forgot-password resource
+resource "aws_api_gateway_resource" "forgot_password" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.auth.id
+  path_part   = "forgot-password"
+}
+
+# /auth/reset-password resource
+resource "aws_api_gateway_resource" "reset_password" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.auth.id
+  path_part   = "reset-password"
+}

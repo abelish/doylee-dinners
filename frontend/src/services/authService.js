@@ -65,10 +65,39 @@ export const logout = async () => {
   }
 };
 
+/**
+ * Request password reset email
+ */
+export const requestPasswordReset = async (email) => {
+  const response = await api.post('/auth/forgot-password', {
+    email,
+  });
+  return response.data;
+};
+
+/**
+ * Reset password with token
+ */
+export const resetPassword = async (token, newPassword) => {
+  const response = await api.post('/auth/reset-password', {
+    token,
+    newPassword,
+  });
+
+  // Store token in localStorage for auto-login
+  if (response.data.success && response.data.data.token) {
+    storeToken(response.data.data.token);
+  }
+
+  return response.data;
+};
+
 export default {
   register,
   login,
   getCurrentUser,
   logout,
+  requestPasswordReset,
+  resetPassword,
   hasToken,
 };

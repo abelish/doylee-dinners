@@ -10,7 +10,7 @@ import { successResponse, errorResponse } from '../../shared/utils/response';
 export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     // Authenticate request
-    const auth = await authenticateRequest(event);
+    await authenticateRequest(event);
 
     // Get mealId from path parameters
     const mealId = event.pathParameters?.mealId;
@@ -32,17 +32,11 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       createdByName = creator?.name;
     }
 
-    // Check if user is cook or assistant (can see dietary restrictions)
-    const canSeeDietaryInfo =
-      auth.userId === meal.cookId ||
-      auth.userId === meal.assistantId ||
-      auth.userId === meal.createdBy;
-
-    // Format diner list
+    // Format diner list - dietary restrictions visible to all
     const formattedDiners = diners.map(diner => ({
       userId: diner.userId,
       name: diner.userName,
-      dietaryRestrictions: canSeeDietaryInfo ? diner.dietaryRestrictions : undefined,
+      dietaryRestrictions: diner.dietaryRestrictions,
       signupTime: diner.signupTime,
     }));
 

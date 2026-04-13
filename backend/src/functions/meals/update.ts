@@ -4,6 +4,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { authenticateRequest } from '../../shared/auth/middleware';
 import { getMealById, updateMeal, countDiners } from '../../shared/db/meals';
+import { getAllUsers } from '../../shared/db/users';
+import { sendMealAnnouncementToAllUsers } from '../../shared/email/ses';
 import { successResponse, errorResponse } from '../../shared/utils/response';
 
 interface UpdateMealRequest {
@@ -52,6 +54,9 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       }
     }
 
+    // Check if this is the first menu post (for email notifications)
+    const isFirstMenuPost = !meal.menu && body.menu && body.menu.trim() !== '';
+
     // Validate updates
     const updates: any = {
       updatedAt: new Date().toISOString(),
@@ -62,6 +67,11 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
         return errorResponse('Menu cannot exceed 2000 characters', 400);
       }
       updates.menu = body.menu;
+
+      // Set menuPostedAt timestamp on first menu post
+      if (isFirstMenuPost) {
+        updates.menuPostedAt = new Date().toISOString();
+      }
     }
 
     if (body.notes !== undefined) {
@@ -97,6 +107,34 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // Update meal
     const updatedMeal = await updateMeal(mealId, updates);
+
+    // Send announcement emails if this is the first menu post
+    if (isFirstMenuPost && body.menu) {
+      try {
+        console.log(`First menu post detected for meal ${mealId}, sending announcement emails`);
+
+        // Get all users
+        const allUsers = await getAllUsers();
+        console.log(`Found ${allUsers.length} users to notify`);
+
+        // Send emails (await but don't throw on failure)
+        try {
+          await sendMealAnnouncementToAllUsers(
+            mealId,
+            meal.date,
+            meal.time,
+            body.menu,
+            allUsers
+          );
+        } catch (error) {
+          console.error('Error sending meal announcement emails:', error);
+          // Don't throw - meal update should succeed even if emails fail
+        }
+      } catch (error) {
+        console.error('Error preparing meal announcement emails:', error);
+        // Don't throw - meal update should succeed even if email prep fails
+      }
+    }
 
     return successResponse({
       meal: {

@@ -61,10 +61,10 @@ resource "aws_dynamodb_table" "main" {
     enabled = true
   }
 
-  # TTL for automatic cleanup (optional, can be used for sessions)
+  # TTL for automatic cleanup (used for password reset tokens)
   ttl {
     enabled        = var.enable_ttl
-    attribute_name = "ttl"
+    attribute_name = "expiresAt"
   }
 
   tags = var.tags

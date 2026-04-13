@@ -6,6 +6,7 @@ set -e
 PROJECT_NAME="doylee-dinners"
 REGION="us-west-2"
 PACKAGES_DIR="/Users/ahendlish/Documents/Projects/doylee-dinners/backend/packages"
+S3_BUCKET="${PROJECT_NAME}-lambda-deployments"
 
 # Get outputs from Terraform
 cd /Users/ahendlish/Documents/Projects/doylee-dinners/infrastructure/terraform
@@ -27,30 +28,42 @@ echo "  API ID: $API_ID"
 echo "  CORS Origin: $CORS_ORIGIN"
 echo ""
 
-# Get JWT secret from Parameter Store
+# Get secrets and config from Parameter Store
 JWT_SECRET=$(aws ssm get-parameter --name "/$PROJECT_NAME/jwt-secret" --with-decryption --query 'Parameter.Value' --output text --region $REGION)
+SES_VERIFIED_EMAIL=$(aws ssm get-parameter --name "/$PROJECT_NAME/ses-verified-email" --query 'Parameter.Value' --output text --region $REGION)
+FRONTEND_URL=$(aws ssm get-parameter --name "/$PROJECT_NAME/frontend-url" --query 'Parameter.Value' --output text --region $REGION)
 
 # Function to create or update Lambda
 deploy_lambda() {
   local FUNC_NAME=$1
   local HANDLER=$2
   local ZIP_FILE=$3
+  local S3_KEY="$(basename $ZIP_FILE)"
 
   echo "📦 Deploying $FUNC_NAME..."
+
+  # Upload to S3
+  echo "  ☁️  Uploading to S3..."
+  aws s3 cp $ZIP_FILE s3://$S3_BUCKET/$S3_KEY --region $REGION --quiet
 
   # Check if function exists
   if aws lambda get-function --function-name $FUNC_NAME --region $REGION >/dev/null 2>&1; then
     echo "  ↻ Updating existing function..."
     aws lambda update-function-code \
       --function-name $FUNC_NAME \
-      --zip-file fileb://$ZIP_FILE \
+      --s3-bucket $S3_BUCKET \
+      --s3-key $S3_KEY \
       --region $REGION \
       --output json > /dev/null
+
+    # Wait for function to be updated
+    echo "  ⏳ Waiting for function to stabilize..."
+    aws lambda wait function-updated --function-name $FUNC_NAME --region $REGION
 
     # Update environment variables
     aws lambda update-function-configuration \
       --function-name $FUNC_NAME \
-      --environment "Variables={TABLE_NAME=$TABLE_NAME,JWT_SECRET=$JWT_SECRET,CORS_ORIGIN=$CORS_ORIGIN,NODE_ENV=production}" \
+      --environment "Variables={TABLE_NAME=$TABLE_NAME,JWT_SECRET=$JWT_SECRET,CORS_ORIGIN=$CORS_ORIGIN,NODE_ENV=production,SES_VERIFIED_EMAIL=$SES_VERIFIED_EMAIL,FRONTEND_URL=$FRONTEND_URL}" \
       --region $REGION \
       --output json > /dev/null
 
@@ -62,10 +75,10 @@ deploy_lambda() {
       --runtime nodejs20.x \
       --role $LAMBDA_ROLE_ARN \
       --handler $HANDLER \
-      --zip-file fileb://$ZIP_FILE \
+      --code S3Bucket=$S3_BUCKET,S3Key=$S3_KEY \
       --timeout 10 \
       --memory-size 256 \
-      --environment "Variables={TABLE_NAME=$TABLE_NAME,JWT_SECRET=$JWT_SECRET,CORS_ORIGIN=$CORS_ORIGIN,NODE_ENV=production}" \
+      --environment "Variables={TABLE_NAME=$TABLE_NAME,JWT_SECRET=$JWT_SECRET,CORS_ORIGIN=$CORS_ORIGIN,NODE_ENV=production,SES_VERIFIED_EMAIL=$SES_VERIFIED_EMAIL,FRONTEND_URL=$FRONTEND_URL}" \
       --region $REGION \
       --output json > /dev/null
 
@@ -95,6 +108,8 @@ deploy_lambda "$PROJECT_NAME-auth-register" "functions/auth/register.handler" "$
 deploy_lambda "$PROJECT_NAME-auth-login" "functions/auth/login.handler" "$PACKAGES_DIR/auth-login.zip"
 deploy_lambda "$PROJECT_NAME-auth-me" "functions/auth/me.handler" "$PACKAGES_DIR/auth-me.zip"
 deploy_lambda "$PROJECT_NAME-auth-logout" "functions/auth/logout.handler" "$PACKAGES_DIR/auth-logout.zip"
+deploy_lambda "$PROJECT_NAME-auth-forgot-password" "functions/auth/forgot-password.handler" "$PACKAGES_DIR/auth-forgot-password.zip"
+deploy_lambda "$PROJECT_NAME-auth-reset-password" "functions/auth/reset-password.handler" "$PACKAGES_DIR/auth-reset-password.zip"
 
 echo ""
 echo "📦 Deploying meal functions..."

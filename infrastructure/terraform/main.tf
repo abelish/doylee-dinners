@@ -24,7 +24,7 @@ module "database" {
   table_name                    = "${var.project_name}-table"
   billing_mode                  = var.dynamodb_billing_mode
   enable_point_in_time_recovery = false # Disable for free tier
-  enable_ttl                    = false # Can enable later for session cleanup
+  enable_ttl                    = true  # Enabled for password reset token cleanup
 
   tags = var.tags
 }
@@ -68,6 +68,15 @@ module "frontend" {
   tags = var.tags
 }
 
+# SES module - Email sending for password reset
+module "ses" {
+  source = "./modules/ses"
+
+  sender_email = var.ses_sender_email
+
+  tags = var.tags
+}
+
 # Store JWT secret in Systems Manager Parameter Store
 resource "aws_ssm_parameter" "jwt_secret" {
   name        = "/${var.project_name}/jwt-secret"
@@ -94,6 +103,26 @@ resource "aws_ssm_parameter" "api_endpoint" {
   description = "API Gateway endpoint URL"
   type        = "String"
   value       = module.api.api_endpoint
+
+  tags = var.tags
+}
+
+# Store SES verified email in Parameter Store
+resource "aws_ssm_parameter" "ses_verified_email" {
+  name        = "/${var.project_name}/ses-verified-email"
+  description = "SES verified email address for sending"
+  type        = "String"
+  value       = module.ses.verified_email
+
+  tags = var.tags
+}
+
+# Store frontend URL in Parameter Store
+resource "aws_ssm_parameter" "frontend_url" {
+  name        = "/${var.project_name}/frontend-url"
+  description = "Frontend CloudFront URL"
+  type        = "String"
+  value       = "https://${module.frontend.cloudfront_domain_name}"
 
   tags = var.tags
 }

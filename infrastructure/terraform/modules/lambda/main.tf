@@ -91,6 +91,34 @@ resource "aws_iam_role_policy_attachment" "lambda_ssm" {
   policy_arn = aws_iam_policy.ssm_access.arn
 }
 
+# IAM policy for SES access (for password reset emails)
+resource "aws_iam_policy" "ses_access" {
+  name        = "${var.project_name}-ses-policy"
+  description = "Allow Lambda functions to send emails via SES"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
+# Attach SES policy to Lambda role
+resource "aws_iam_role_policy_attachment" "lambda_ses" {
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = aws_iam_policy.ses_access.arn
+}
+
 # Lambda Layer for shared dependencies (node_modules)
 # Temporarily disabled until we build actual Lambda functions in Phase 3
 # resource "aws_lambda_layer_version" "dependencies" {

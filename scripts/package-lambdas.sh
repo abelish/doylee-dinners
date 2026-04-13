@@ -53,6 +53,8 @@ package_lambda "auth-register" "functions/auth/register"
 package_lambda "auth-login" "functions/auth/login"
 package_lambda "auth-me" "functions/auth/me"
 package_lambda "auth-logout" "functions/auth/logout"
+package_lambda "auth-forgot-password" "functions/auth/forgot-password"
+package_lambda "auth-reset-password" "functions/auth/reset-password"
 
 echo ""
 echo "📦 Packaging meal functions..."

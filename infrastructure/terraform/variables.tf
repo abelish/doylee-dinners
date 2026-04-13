@@ -57,6 +57,12 @@ variable "frontend_domain_name" {
   default     = ""
 }
 
+# SES configuration
+variable "ses_sender_email" {
+  description = "Email address to verify and use for sending (e.g., noreply@doylee-dinners.com)"
+  type        = string
+}
+
 # Tags
 variable "tags" {
   description = "Common tags for all resources"

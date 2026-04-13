@@ -1,6 +1,6 @@
 // User database operations
 
-import { GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { User, UserProfile } from '../../types/entities';
 import { getDynamoDBClient, getTableName } from './client';
 
@@ -134,6 +134,55 @@ export async function updateUserProfile(
   );
 
   return result.Attributes as User;
+}
+
+/**
+ * Update user password
+ */
+export async function updateUserPassword(userId: string, newPasswordHash: string): Promise<void> {
+  const client = getDynamoDBClient();
+  const tableName = getTableName();
+
+  await client.send(
+    new UpdateCommand({
+      TableName: tableName,
+      Key: {
+        PK: `USER#${userId}`,
+        SK: 'PROFILE',
+      },
+      UpdateExpression: 'SET #passwordHash = :passwordHash, #updatedAt = :updatedAt',
+      ExpressionAttributeNames: {
+        '#passwordHash': 'passwordHash',
+        '#updatedAt': 'updatedAt',
+      },
+      ExpressionAttributeValues: {
+        ':passwordHash': newPasswordHash,
+        ':updatedAt': new Date().toISOString(),
+      },
+    })
+  );
+}
+
+/**
+ * Get all registered users
+ * Uses DynamoDB Scan - acceptable for small user base
+ */
+export async function getAllUsers(): Promise<User[]> {
+  const client = getDynamoDBClient();
+  const tableName = getTableName();
+
+  const result = await client.send(
+    new ScanCommand({
+      TableName: tableName,
+      FilterExpression: 'begins_with(PK, :pk) AND SK = :sk',
+      ExpressionAttributeValues: {
+        ':pk': 'USER#',
+        ':sk': 'PROFILE',
+      },
+    })
+  );
+
+  return (result.Items || []) as User[];
 }
 
 /**

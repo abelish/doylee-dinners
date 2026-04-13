@@ -65,6 +65,12 @@ const LoginForm = () => {
             />
           </div>
 
+          <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
+            <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: '#667eea' }}>
+              Forgot Password?
+            </Link>
+          </div>
+
           <button type="submit" className="btn-primary" disabled={isSubmitting}>
             {isSubmitting ? 'Signing in...' : 'Sign In'}
           </button>

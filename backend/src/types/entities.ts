@@ -52,6 +52,7 @@ export interface Meal {
   assistantId?: string;
   assistantName?: string;
   menu?: string;
+  menuPostedAt?: string; // ISO timestamp of first menu post
   notes?: string;
   status: 'OPEN' | 'FULL' | 'CLOSED' | 'CANCELLED';
   createdBy: string; // userId of creator

@@ -209,7 +209,6 @@
 .status-needs-cook {
   background: linear-gradient(135deg, #feebc8 0%, #fbd38d 100%);
   color: #7c2d12;
-  animation: wiggle 1s ease-in-out infinite;
 }
 
 .status-closed {
@@ -223,18 +222,6 @@
   }
   50% {
     opacity: 0.8;
-  }
-}
-
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-3deg);
-  }
-  75% {
-    transform: rotate(3deg);
   }
 }
 

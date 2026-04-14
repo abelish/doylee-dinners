@@ -33,27 +33,34 @@
 │ - login        │  │ - list     │  │ - update   │
 │ - logout       │  │ - get      │  │            │
 │ - me           │  │ - update   │  │            │
+│ - forgot-pwd   │  │ - delete   │  │            │
+│ - reset-pwd    │  │ - signup   │  │            │
 └────────┬───────┘  └─────┬──────┘  └──────┬─────┘
          │                │                 │
-         └────────────────┼─────────────────┘
-                          │
-                          ▼
-              ┌───────────────────────┐
-              │      DynamoDB         │
-              │  (Single Table)       │
-              │  - PK/SK design       │
-              │  - GSI1 (email)       │
-              │  - GSI2 (date)        │
-              └───────────────────────┘
-                          │
-                          │
-                          ▼
-              ┌───────────────────────┐
-              │  Systems Manager      │
-              │  Parameter Store      │
-              │  - JWT secret         │
-              │  - Config values      │
-              └───────────────────────┘
+         │   ┌────────────┘                 │
+         │   │                              │
+         │   │   ┌──────────────────────────┘
+         │   │   │
+         ▼   ▼   ▼
+     ┌───────────────────────┐       ┌───────────────────────┐
+     │      DynamoDB         │       │    AWS SES            │
+     │  (Single Table)       │       │ (Email Service)       │
+     │  - PK/SK design       │       │ - Password resets     │
+     │  - GSI1 (email)       │       │ - Meal announcements  │
+     │  - GSI2 (date)        │◄──────│ - Sandbox mode        │
+     │  - TTL (tokens)       │       └───────────────────────┘
+     └───────────────────────┘
+                 │
+                 │
+                 ▼
+     ┌───────────────────────┐
+     │  Systems Manager      │
+     │  Parameter Store      │
+     │  - JWT secret         │
+     │  - SES sender email   │
+     │  - Frontend URL       │
+     │  - Config values      │
+     └───────────────────────┘
 ```
 
 ## Terraform Modules
@@ -80,6 +87,7 @@
   - CloudWatch Logs (logging)
   - DynamoDB (data access)
   - Systems Manager (secrets)
+  - SES (sending emails)
 - Lambda layer with shared dependencies
 
 **Outputs:**
@@ -118,6 +126,32 @@
 **Outputs:**
 - `website_url` - CloudFront URL
 - `cloudfront_distribution_id` - For cache invalidation
+
+### 5. SES Module (`modules/ses`)
+**Purpose:** Email service for transactional emails
+
+**Resources:**
+- Email identity verification (sender email)
+- Sandbox mode (default) - requires recipient verification
+- Production access (optional) - requires domain verification
+
+**Outputs:**
+- `verified_email` - Verified sender email address
+
+**Email Types:**
+- **Password Reset:** Secure tokens with 1-hour expiration
+- **Meal Announcements:** Sent when cook first posts menu
+
+**Sandbox Limitations:**
+- 200 emails/day limit
+- Can only send TO verified email addresses
+- Requires manual verification per recipient
+
+**Production Mode:**
+- Requires custom domain ($1-2/year)
+- Send to any email address
+- 62,000 emails/month free from EC2/Lambda
+- ~$0.10 per 1,000 emails after that
 
 ## Resource Naming Convention
 
@@ -160,6 +194,13 @@ Examples:
 - **Price Class:** 100 (cheapest)
 - **Free Tier:** 50 GB data transfer out, 2M requests
 - **Estimated Usage:** 1 GB transfer, 500 requests/month
+- **Cost:** $0/month
+
+### SES (Email Service)
+- **Mode:** Sandbox (requires recipient verification)
+- **Free Tier:** 62,000 emails/month when called from Lambda
+- **Daily Limit (Sandbox):** 200 emails/day
+- **Estimated Usage:** 50-100 emails/month (password resets + meal announcements)
 - **Cost:** $0/month
 
 **Total Monthly Cost:** ~$0 (within free tier limits)
